@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>ChinaDiscordServer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #000080 0%, #000000 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Orbitron', sans-serif;
+            overflow-x: hidden;
+            color: white;
+            position: relative;
+        }
+
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        /* Остальные стили остаются без изменений */
+        .discord-widget {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            animation: widgetSlide 1.5s ease-out 0.8s forwards;
+        }
+
+        .header {
+            font-size: 4em;
+            text-transform: uppercase;
+            margin: 2rem 0;
+            opacity: 0;
+            animation: fadeIn 2s ease-out forwards;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+
+        .table-container {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            transform: translateY(50px);
+            opacity: 0;
+            animation: slideUp 1.5s ease-out 0.5s forwards;
+            margin-bottom: 50px;
+        }
+
+        table {
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes widgetSlide {
+            from { opacity: 0; right: -400px; }
+            to { opacity: 1; right: 30px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles-container">
+  <canvas id="canvas"></canvas>
+    </div>
+    <canvas id="canvas"></canvas>
+    
+    <h1 class="header">КИТАЙ</h1>
+    <div class="table-container">
+        <table>
+            <tr>
+                <th>Должность</th>
+                <th>Ники</th>
+            </tr>
+            <tr>
+                <td>Админ</td>
+                <td>@yoncola</td>
+            </tr>
+            <tr>
+                <td>Помощники</td>
+                <td>@neitral3</td>
+            </tr>
+        </table>
+    </div>
+
+    <iframe class="discord-widget"
+        src="https://discord.com/widget?id=1365015225870581870&theme=dark" 
+        width="350" 
+        height="500" 
+        allowtransparency="true" 
+        frameborder="0" 
+        sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts">
+    </iframe>
+
+    <script>
+        // Анимация соединяющихся точек
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let mouseX = 0;
+        let mouseY = 0;
+
+        // Настройки точек (3-4 см = ~150px)
+        const config = {
+            dotCount: 80,
+            maxDistance: 150,
+            lineWidth: 0.8,
+            dotRadius: 2,
+            dotSpeed: 0.5,
+            lineColor: 'rgba(255, 255, 255, 0.15)'
+        };
+
+        class Dot {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * config.dotSpeed;
+                this.vy = (Math.random() - 0.5) * config.dotSpeed;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, config.dotRadius, 0, Math.PI * 2);
+                ctx.fillStyle = '#FFF';
+                ctx.fill();
+            }
+        }
+
+        let dots = [];
+        
+        function init() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            dots = Array.from({ length: config.dotCount }, () => new Dot());
+        }
+
+        function drawLines() {
+            for (let i = 0; i < dots.length; i++) {
+                for (let j = i + 1; j < dots.length; j++) {
+                    const dx = dots[i].x - dots[j].x;
+                    const dy = dots[i].y - dots[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < config.maxDistance) {
+                        ctx.beginPath();
+                        ctx.moveTo(dots[i].x, dots[i].y);
+                        ctx.lineTo(dots[j].x, dots[j].y);
+                        ctx.strokeStyle = config.lineColor;
+                        ctx.lineWidth = config.lineWidth * (1 - dist/config.maxDistance);
+                        ctx.stroke();
+                    }
+                }
+
+                // Взаимодействие с курсором
+                const dx = dots[i].x - mouseX;
+                const dy = dots[i].y - mouseY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < config.maxDistance * 1.5) {
+                    ctx.beginPath();
+                    ctx.moveTo(dots[i].x, dots[i].y);
+                    ctx.lineTo(mouseX, mouseY);
+                    ctx.strokeStyle = 'rgba(0, 243, 255, 0.3)';
+                    ctx.lineWidth = config.lineWidth * (1 - dist/(config.maxDistance * 1.5));
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            dots.forEach(dot => {
+                dot.update();
+                dot.draw();
+            });
+
+            drawLines();
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        window.addEventListener('resize', init);
+        window.addEventListener('load', () => {
+            init();
+            animate();
+        });
+    </script>
+</body>
+</html>
